@@ -1,0 +1,63 @@
+---
+- name: Deploy Minikube
+  hosts: staging_servers
+  become: true
+  tasks:
+    - name: Install required packages
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+          - conntrack
+
+    - name: Add Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker APT repository
+      apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu focal stable
+        state: present
+
+    - name: Install Docker
+      apt:
+        name: docker-ce
+        state: present
+
+    - name: Add Kubernetes APT key
+      apt_key:
+        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        state: present
+
+    - name: Add Kubernetes APT repository
+      apt_repository:
+        repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+        state: present
+
+    - name: install minikube
+      apt:
+        deb: "https://storage.googleapis.com/minikube/releases/latest/minikube_latest_amd64.deb"
+        state: present
+    - name: Install kubectl
+      apt:
+        name: kubectl
+        state: present
+
+    - name: Start Minikube
+      ansible.builtin.command: minikube start  --force
+      ignore_errors: true
+
+    - name: Get HELM
+      ansible.builtin.unarchive:
+        src: https://get.helm.sh/helm-v3.13.2-linux-amd64.tar.gz
+        dest: /home/anton
+        remote_src: yes
+    - name: Install HELM
+      ansible.builtin.copy:
+        src: /home/anton/linux-amd64/helm
+        dest: /bin
+        mode: '0755'
+        remote_src: yes
